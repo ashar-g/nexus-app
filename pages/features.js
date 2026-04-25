@@ -67,7 +67,7 @@ export default function Features() {
         <section className={styles.header}>
           <div className={styles.headerGlow} />
           <div className="container">
-            <h1>Everything you need.<br /><span className="gradient-text">Nothing you don't.</span></h1>
+            <h1>Everything you need.<br /><span className="gradient-text">Nothing you don&apos;t.</span></h1>
             <p>Nexus is purpose-built for engineering teams who need deep visibility without the complexity of stitching together ten different tools.</p>
           </div>
         </section>
