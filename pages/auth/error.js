@@ -32,8 +32,8 @@ export default function AuthError() {
               <path d="M16 10v7M16 20.5v1" stroke="#ff5a5a" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
-          <h1>Authentication Error</h1>
-          <p>{message}</p>
+          <h1 className={styles.title}>Authentication Error</h1>
+          <p className={styles.description}>{message}</p>
           {error && <code className={styles.code}>Error code: {error}</code>}
           <div className={styles.actions}>
             <Link href="/auth/signin" className="btn btn-primary">Try Again</Link>
