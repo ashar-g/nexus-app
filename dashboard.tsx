@@ -1,59 +1,33 @@
-"use client";
+import { getSession, signOut } from "next-auth/react";
 
-import { useSession, signIn, signOut } from "next-auth/react";
+type Props = {
+  session?: {
+    user?: {
+      name?: string;
+      email?: string;
+    };
+  };
+};
 
-export default function DashboardPage() {
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
-        <div className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-10 shadow-xl">
-          <p className="text-sm font-semibold text-cyan-400">Nexus Platform</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight">Loading your secure workspace</h1>
-          <p className="mt-3 text-slate-300">Please wait while your authenticated session is verified.</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
-        <div className="w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-900 p-10 shadow-xl">
-          <p className="text-sm font-semibold text-cyan-400">Nexus Platform</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">Enterprise Identity Access</h1>
-          <p className="mt-4 text-base leading-7 text-slate-300">
-            Secure access powered by Okta SSO with a clean modern enterprise experience.
-          </p>
-
-          <button
-            onClick={() => signIn("okta")}
-            className="mt-8 w-full rounded-2xl bg-cyan-500 px-6 py-4 text-base font-semibold text-slate-950 transition hover:bg-cyan-400"
-          >
-            Sign in with Okta
-          </button>
-        </div>
-      </main>
-    );
-  }
+export default function Dashboard({ session }: Props) {
+  const user = session?.user;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white px-6 py-10">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-10 rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <main className="min-h-screen bg-slate-100 text-slate-900 px-6 py-10">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-cyan-400">Nexus Platform</p>
+              <p className="text-sm font-semibold text-blue-600">Nexus Platform</p>
               <h1 className="mt-2 text-4xl font-bold tracking-tight">Executive Dashboard</h1>
-              <p className="mt-3 text-slate-300">
-                Welcome back, {session?.user?.name || session?.user?.email || "User"}
+              <p className="mt-3 text-slate-600">
+                Welcome back, {user?.name || user?.email || "User"}
               </p>
             </div>
 
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="rounded-2xl border border-slate-700 px-6 py-3 font-medium text-white hover:bg-slate-800"
+              className="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-medium text-slate-800 hover:bg-slate-50"
             >
               Sign Out
             </button>
@@ -61,28 +35,49 @@ export default function DashboardPage() {
         </header>
 
         <section className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-lg">
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
             <h2 className="text-lg font-semibold">Profile</h2>
-            <p className="mt-3 text-sm text-slate-300">Live identity details from your authenticated Okta session.</p>
-            <div className="mt-5 space-y-3 text-sm">
-              <p><span className="font-semibold">Name:</span> {session?.user?.name || "Not available"}</p>
-              <p><span className="font-semibold">Email:</span> {session?.user?.email || "Not available"}</p>
+            <p className="mt-3 text-sm text-slate-600">Authenticated user details from Okta session.</p>
+            <div className="mt-4 space-y-2 text-sm">
+              <p><span className="font-semibold">Name:</span> {user?.name || "Not available"}</p>
+              <p><span className="font-semibold">Email:</span> {user?.email || "Not available"}</p>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-lg">
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
             <h2 className="text-lg font-semibold">Security</h2>
-            <p className="mt-3 text-sm text-slate-300">OIDC authentication is enforced with secure session controls and protected access policies.</p>
+            <p className="mt-3 text-sm text-slate-600">
+              Secure OIDC authentication with protected session controls and enterprise-grade access.
+            </p>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-lg">
-            <h2 className="text-lg font-semibold">Intelligence Built In</h2>
-            <p className="mt-3 text-sm text-slate-300">
-              Removed legacy Brian image section. This section is now clean text-only content with improved visual consistency.
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <h2 className="text-lg font-semibold">Environment</h2>
+            <p className="mt-3 text-sm text-slate-600">
+              Clean modern UI with lighter navigation and production-ready deployment for Vercel.
             </p>
           </div>
         </section>
       </div>
     </main>
   );
+}
+
+export async function getServerSideProps(context: any) {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      session,
+    },
+  };
 }
