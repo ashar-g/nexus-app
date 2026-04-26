@@ -175,3 +175,13 @@ nexus-app/
 - ✅ Protected pages use server-side session check (not client-side only)
 - ✅ NEXTAUTH_SECRET should be a strong random string (use `openssl rand -base64 32`)
 - ✅ OIDC with PKCE via Okta — industry standard enterprise auth
+
+---
+
+## Changelog
+
+### v2.0 — Current
+- **Bug fix**: Dashboard & Analytics now use `getServerSession(req, res, authOptions)` from `next-auth/next` (server-side). The previous `getSession(context)` from `next-auth/react` is client-only and returned `undefined` on the server, causing the `Cannot read properties of undefined (reading 'user')` crash.
+- **Bug fix**: All CSS Modules now use scoped class selectors only — no bare `h1`, `p`, etc. selectors (which Next.js rejects with "Selector is not pure").
+- **UI redesign**: Full Coinbase-inspired light theme — clean whites, confident blue (#0052ff), card-based layouts, Manrope font.
+- **Sign-in**: Split-screen layout with testimonial panel.

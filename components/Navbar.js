@@ -1,106 +1,105 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const navLinks = [
-    { href: "/", label: "Home", public: true },
-    { href: "/features", label: "Features", public: true },
-    { href: "/dashboard", label: "Dashboard", public: false },
-    { href: "/analytics", label: "Analytics", public: false },
+    { href: "/", label: "Home" },
+    { href: "/features", label: "Features" },
+    { href: "/dashboard", label: "Dashboard", protected: true },
+    { href: "/analytics", label: "Analytics", protected: true },
   ];
 
   return (
-    <nav className={styles.nav}>
+    <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="8" fill="url(#logoGrad)" />
-            <path d="M8 14L12 10L16 14L20 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M8 18L12 14L16 18L20 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
-            <defs>
-              <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#4f7cff" />
-                <stop offset="1" stopColor="#7c4dff" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <div className={styles.logoMark}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3-3 3 3 3-3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 12l3-3 3 3 3-3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
+            </svg>
+          </div>
           <span>Nexus</span>
         </Link>
 
         <div className={styles.links}>
-          {navLinks.map((link) => (
+          {navLinks.map(link => (
             <Link
               key={link.href}
-              href={link.public || session ? link.href : "/auth/signin"}
+              href={link.protected && !session ? "/auth/signin" : link.href}
               className={`${styles.link} ${router.pathname === link.href ? styles.active : ""}`}
             >
-              {!link.public && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.lockIcon}>
-                  <rect x="2" y="5" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M4 5V3.5a2 2 0 014 0V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              {link.label}
+              {link.protected && !session && (
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" className={styles.lock}>
+                  <rect x="2" y="5.5" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
               )}
-              {link.label}
             </Link>
           ))}
         </div>
 
-        <div className={styles.auth}>
+        <div className={styles.actions}>
           {session ? (
-            <div className={styles.userMenu}>
+            <div className={styles.userArea}>
               <div className={styles.avatar}>
-                {session.user?.name?.[0] || session.user?.email?.[0] || "U"}
+                {(session.user?.name || session.user?.email || "U")[0].toUpperCase()}
               </div>
-              <span className={styles.userName}>{session.user?.name?.split(" ")[0]}</span>
-              <button className="btn btn-ghost" onClick={() => signOut({ callbackUrl: "/" })}>
-                Sign Out
+              <span className={styles.userName}>
+                {session.user?.name?.split(" ")[0] || session.user?.email?.split("@")[0]}
+              </span>
+              <button className="btn btn-secondary btn-sm" onClick={() => signOut({ callbackUrl: "/" })}>
+                Sign out
               </button>
             </div>
           ) : (
-            <button
-              className="btn btn-primary"
-              onClick={() => signIn("okta", { callbackUrl: "/dashboard" })}
-            >
-              Sign In
-            </button>
+            <div className={styles.authBtns}>
+              <button className="btn btn-ghost btn-sm" onClick={() => signIn("okta")}>Sign in</button>
+              <button className="btn btn-primary btn-sm" onClick={() => signIn("okta", { callbackUrl: "/dashboard" })}>
+                Get started
+              </button>
+            </div>
           )}
         </div>
 
-        <button className={styles.mobileToggle} onClick={() => setMobileOpen(!mobileOpen)}>
-          <span /><span /><span />
+        <button className={styles.mobileBtn} onClick={() => setMobileOpen(!mobileOpen)}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            {mobileOpen
+              ? <><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>
+              : <><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>
+            }
+          </svg>
         </button>
       </div>
 
       {mobileOpen && (
         <div className={styles.mobileMenu}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.public || session ? link.href : "/auth/signin"}
-              className={styles.mobileLink}
-              onClick={() => setMobileOpen(false)}
-            >
+          {navLinks.map(link => (
+            <Link key={link.href} href={link.protected && !session ? "/auth/signin" : link.href}
+              className={styles.mobileLink} onClick={() => setMobileOpen(false)}>
               {link.label}
-              {!link.public && <span className={styles.badge}>Pro</span>}
             </Link>
           ))}
-          <div className={styles.mobileDivider} />
-          {session ? (
-            <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => signOut({ callbackUrl: "/" })}>
-              Sign Out
-            </button>
-          ) : (
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => signIn("okta")}>
-              Sign In with Okta
-            </button>
-          )}
+          <div className={styles.mobileDivider}/>
+          {session
+            ? <button className="btn btn-secondary" style={{width:"100%"}} onClick={() => signOut({callbackUrl:"/"})}>Sign out</button>
+            : <button className="btn btn-primary" style={{width:"100%"}} onClick={() => signIn("okta", {callbackUrl:"/dashboard"})}>Sign in with Okta</button>
+          }
         </div>
       )}
     </nav>
