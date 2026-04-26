@@ -16,13 +16,9 @@ export default function Home() {
       </header>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <p className="text-sm font-semibold text-blue-600">Enterprise Identity</p>
-        <h1 className="mt-4 max-w-3xl text-6xl font-bold tracking-tight">
+        <h1 className="max-w-3xl text-6xl font-bold tracking-tight">
           Intelligence built in, not bolted on.
         </h1>
-        <p className="mt-6 max-w-2xl text-lg text-slate-600">
-          Secure identity access with modern authentication and a clean professional experience.
-        </p>
       </section>
     </main>
   );

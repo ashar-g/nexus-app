@@ -1,13 +1,15 @@
 import { getSession } from "next-auth/react";
 
-export default function Dashboard({ user }) {
+export default function Dashboard(props) {
+  const user = props?.user || {};
+
   return (
     <main className="min-h-screen bg-[#F7F9FC] text-[#0A2540]">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div>
             <p className="text-sm font-semibold text-blue-600">Nexus Platform</p>
-            <h1 className="text-2xl font-bold tracking-tight">Executive Dashboard</h1>
+            <h1 className="text-2xl font-bold">Executive Dashboard</h1>
           </div>
           <a
             href="/"
@@ -22,10 +24,10 @@ export default function Dashboard({ user }) {
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
           <p className="text-sm font-medium text-blue-600">Welcome</p>
           <h2 className="mt-2 text-4xl font-bold tracking-tight">
-            {user?.name || user?.email || "User"}
+            {user.name || user.email || "Authenticated User"}
           </h2>
-          <p className="mt-4 max-w-2xl text-slate-600">
-            Secure access powered by Okta OIDC with a clean Coinbase-inspired enterprise experience.
+          <p className="mt-4 text-slate-600">
+            Secure enterprise access with Okta OIDC and a clean professional UI.
           </p>
         </div>
       </section>
@@ -34,23 +36,36 @@ export default function Dashboard({ user }) {
 }
 
 export async function getServerSideProps(context) {
-  const session = await getSession(context);
+  try {
+    const session = await getSession(context);
 
-  if (!session || !session.user) {
+    if (!session) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
+    const safeUser = {
+      name: session?.user?.name || null,
+      email: session?.user?.email || null,
+    };
+
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: safeUser,
+      },
+    };
+  } catch (error) {
+    return {
+      props: {
+        user: {
+          name: null,
+          email: null,
+        },
       },
     };
   }
-
-  return {
-    props: {
-      user: {
-        name: session.user.name || null,
-        email: session.user.email || null,
-      },
-    },
-  };
 }
