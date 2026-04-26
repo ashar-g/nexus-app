@@ -55,7 +55,7 @@ export default function Dashboard({ session }) {
           <div className={styles.pageHeader}>
             <div>
               <h1>Dashboard</h1>
-              <p>Welcome back, {session.user?.name || session.user?.email}. Here&apos;s your system overview.</p>
+              <p>Welcome back, {session.user?.name || session.user?.email}. Here's your system overview.</p>
             </div>
             <div className={styles.headerMeta}>
               <div className={styles.liveTag}>

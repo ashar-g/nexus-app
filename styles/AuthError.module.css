@@ -40,13 +40,13 @@
   margin: 0 auto 24px;
 }
 
-.title {
+h1 {
   font-size: 1.5rem;
   letter-spacing: -0.02em;
   margin-bottom: 12px;
 }
 
-.description {
+p {
   color: var(--text-2);
   font-size: 15px;
   line-height: 1.6;

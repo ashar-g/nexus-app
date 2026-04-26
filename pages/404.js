@@ -13,8 +13,8 @@ export default function NotFound() {
         <div className={styles.glow} />
         <div className={styles.content}>
           <span className={styles.code}>404</span>
-          <h1 className={styles.title}>Page not found</h1>
-          <p className={styles.description}>The page you&apos;re looking for doesn&apos;t exist or has been moved.</p>
+          <h1>Page not found</h1>
+          <p>The page you're looking for doesn't exist or has been moved.</p>
           <div className={styles.actions}>
             <Link href="/" className="btn btn-primary">Go Home</Link>
             <Link href="/features" className="btn btn-ghost">View Features</Link>
