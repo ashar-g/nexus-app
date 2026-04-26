@@ -1,72 +1,42 @@
-import { getSession, signOut } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
-type Props = {
-  session?: {
-    user?: {
-      name?: string;
-      email?: string;
-    };
-  };
-};
-
-export default function Dashboard({ session }: Props) {
-  const user = session?.user;
-
+export default function Dashboard({ user }) {
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900 px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-blue-600">Nexus Platform</p>
-              <h1 className="mt-2 text-4xl font-bold tracking-tight">Executive Dashboard</h1>
-              <p className="mt-3 text-slate-600">
-                Welcome back, {user?.name || user?.email || "User"}
-              </p>
-            </div>
-
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-medium text-slate-800 hover:bg-slate-50"
-            >
-              Sign Out
-            </button>
+    <main className="min-h-screen bg-[#F7F9FC] text-[#0A2540]">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <div>
+            <p className="text-sm font-semibold text-blue-600">Nexus Platform</p>
+            <h1 className="text-2xl font-bold tracking-tight">Executive Dashboard</h1>
           </div>
-        </header>
+          <a
+            href="/"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-medium text-slate-800 hover:bg-slate-50"
+          >
+            Home
+          </a>
+        </div>
+      </header>
 
-        <section className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
-            <h2 className="text-lg font-semibold">Profile</h2>
-            <p className="mt-3 text-sm text-slate-600">Authenticated user details from Okta session.</p>
-            <div className="mt-4 space-y-2 text-sm">
-              <p><span className="font-semibold">Name:</span> {user?.name || "Not available"}</p>
-              <p><span className="font-semibold">Email:</span> {user?.email || "Not available"}</p>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
-            <h2 className="text-lg font-semibold">Security</h2>
-            <p className="mt-3 text-sm text-slate-600">
-              Secure OIDC authentication with protected session controls and enterprise-grade access.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
-            <h2 className="text-lg font-semibold">Environment</h2>
-            <p className="mt-3 text-sm text-slate-600">
-              Clean modern UI with lighter navigation and production-ready deployment for Vercel.
-            </p>
-          </div>
-        </section>
-      </div>
+      <section className="mx-auto max-w-7xl px-6 py-10">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <p className="text-sm font-medium text-blue-600">Welcome</p>
+          <h2 className="mt-2 text-4xl font-bold tracking-tight">
+            {user?.name || user?.email || "User"}
+          </h2>
+          <p className="mt-4 max-w-2xl text-slate-600">
+            Secure access powered by Okta OIDC with a clean Coinbase-inspired enterprise experience.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context) {
   const session = await getSession(context);
 
-  if (!session) {
+  if (!session || !session.user) {
     return {
       redirect: {
         destination: "/",
@@ -77,7 +47,10 @@ export async function getServerSideProps(context: any) {
 
   return {
     props: {
-      session,
+      user: {
+        name: session.user.name || null,
+        email: session.user.email || null,
+      },
     },
   };
 }
