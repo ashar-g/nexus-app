@@ -99,3 +99,84 @@
   .mobileBtn { display: flex; }
   .mobileMenu { display: flex; }
 }
+
+/* User dropdown menu */
+.userArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.12s;
+  user-select: none;
+}
+.userArea:hover { border-color: #cbd5e1; }
+.chevronUp { transform: rotate(180deg); }
+.userMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 200;
+  overflow: hidden;
+  animation: fadeIn 0.1s ease;
+}
+.userMenuHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.menuAvatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--blue-600);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.menuName { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.menuEmail { display: block; font-size: 11px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.menuDivider { height: 1px; background: var(--border); }
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background 0.1s, color 0.1s;
+  cursor: pointer;
+}
+.menuItem:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.menuItemDanger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.menuItemDanger:hover { background: var(--red-bg); }
