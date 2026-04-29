@@ -33,7 +33,7 @@ export async function getServerSideProps(context) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function Badge({ children, variant = "default" }) {
-  return <span className={`${styles.badge} ${styles[`badge_${variant}`]}`}>{children}</span>;
+  return <span className={`${styles.badge} ${styles['badge_' + variant]}`}>{children}</span>;
 }
 
 function ClaimRow({ label, value, mono = false, copyable = false }) {
@@ -181,6 +181,11 @@ export default function Profile({ serverSession, initialPrefs }) {
               <p className={styles.heroEmail}>{u.email}</p>
               <div className={styles.heroBadges}>
                 {u.emailVerified && <Badge variant="green">✓ Verified</Badge>}
+                {u.idpName && (
+                  <Badge variant={u.idpName.includes("Microsoft") ? "entra" : "okta"}>
+                    {u.idpName.includes("Microsoft") ? "⊞" : "○"} {u.idpName}
+                  </Badge>
+                )}
                 {u.groups?.slice(0, 3).map(g => <Badge key={g} variant="blue">{g}</Badge>)}
                 {u.amr?.includes("mfa") && <Badge variant="purple">MFA enabled</Badge>}
                 {u.locale && <Badge variant="default">{u.locale}</Badge>}
@@ -243,6 +248,9 @@ export default function Profile({ serverSession, initialPrefs }) {
                   <ClaimRow label="Identity provider"   value={u.idp}    mono />
                   <ClaimRow label="Groups"              value={u.groups?.length ? u.groups : ["(none)"]} />
                   <ClaimRow label="Auth methods (amr)"  value={u.amr?.length   ? u.amr   : ["(none)"]} />
+                  {/* Entra ID-specific */}
+                  {u.tenantId && <ClaimRow label="Tenant ID (tid)"    value={u.tenantId}  mono copyable />}
+                  {u.objectId && <ClaimRow label="Object ID (oid)"    value={u.objectId}  mono copyable />}
                 </Section>
 
                 <Section title="Raw OIDC Claims" icon="📄">
@@ -262,6 +270,10 @@ export default function Profile({ serverSession, initialPrefs }) {
                       groups:             u.groups,
                       amr:                u.amr,
                       idp:                u.idp,
+                      idpName:            u.idpName,
+                      // Entra ID only
+                      tenantId:           u.tenantId || undefined,
+                      objectId:           u.objectId || undefined,
                     }, null, 2)}</pre>
                     <button className={styles.copyRaw} onClick={() => {
                       navigator.clipboard.writeText(JSON.stringify(serverSession?.user, null, 2));

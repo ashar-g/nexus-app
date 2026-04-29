@@ -185,3 +185,61 @@ nexus-app/
 - **Bug fix**: All CSS Modules now use scoped class selectors only — no bare `h1`, `p`, etc. selectors (which Next.js rejects with "Selector is not pure").
 - **UI redesign**: Full Coinbase-inspired light theme — clean whites, confident blue (#0052ff), card-based layouts, Manrope font.
 - **Sign-in**: Split-screen layout with testimonial panel.
+
+---
+
+## Setting up Microsoft Entra ID (Azure AD)
+
+### 1. Register an App in Azure Portal
+
+1. Go to [portal.azure.com](https://portal.azure.com) → **Microsoft Entra ID** → **App registrations** → **New registration**
+2. Configure:
+   - **Name**: Nexus App
+   - **Supported account types**: Choose based on your org (single-tenant or multi-tenant)
+   - **Redirect URI**: Web → `http://localhost:3000/api/auth/callback/azure-ad`
+3. Click **Register**
+
+### 2. Get your credentials
+
+From the **Overview** tab, note:
+- **Application (client) ID** → `ENTRA_CLIENT_ID`
+- **Directory (tenant) ID** → `ENTRA_TENANT_ID`
+
+### 3. Create a client secret
+
+**Certificates & secrets** → **New client secret** → copy the **Value** → `ENTRA_CLIENT_SECRET`
+
+### 4. Add API permissions (for full profile claims)
+
+**API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated**:
+- `openid`, `profile`, `email`, `offline_access`, `User.Read`
+
+Click **Grant admin consent**.
+
+### 5. (Optional) Enable group claims
+
+To get `groups` in the token, edit the **App manifest** and set:
+```json
+"groupMembershipClaims": "SecurityGroup"
+```
+
+### 6. Add production redirect URI
+
+**Authentication** → **Add URI** → `https://your-app.vercel.app/api/auth/callback/azure-ad`
+
+### 7. Add env vars to Vercel
+
+Add these alongside the Okta vars:
+- `ENTRA_CLIENT_ID`
+- `ENTRA_CLIENT_SECRET`
+- `ENTRA_TENANT_ID`
+
+---
+
+## How multi-IDP works
+
+Both providers use the **OIDC Authorization Code flow**. After sign-in:
+- `session.provider` tells you which IDP was used (`"okta"` or `"azure-ad"`)
+- `session.user.idpName` is a human-readable label (`"Okta"` or `"Microsoft Entra ID"`)
+- Entra-only fields (`tenantId`, `objectId`) are `null` for Okta sessions and vice-versa
+- All other claims (`name`, `email`, `groups`, `amr`, etc.) are normalised to the same shape regardless of IDP

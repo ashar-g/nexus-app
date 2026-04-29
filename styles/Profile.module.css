@@ -413,3 +413,7 @@
   .claimLabel { width: 120px; }
   .tabs { overflow-x: auto; }
 }
+
+/* IDP-specific badge variants */
+.badge_okta  { background: var(--blue-50); color: var(--blue-700); border: 1px solid var(--blue-100); }
+.badge_entra { background: #e8f4fd; color: #004578; border: 1px solid #bee3f8; }
