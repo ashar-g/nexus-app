@@ -25,7 +25,7 @@ export default function SignIn() {
   const error = router.query.error;
   const errorMsg = ERROR_MESSAGES[error] || (error ? ERROR_MESSAGES.Default : null);
 
-  const [loading, setLoading] = useState(null); // "okta" | "azure-ad" | null
+  const [loading, setLoading] = useState(null); // "okta" | "microsoft-entra-external" | null
 
   const handleSignIn = async (provider) => {
     setLoading(provider);
@@ -99,8 +99,8 @@ export default function SignIn() {
 
             {/* ── Entra ID button ── */}
             <button
-              className={`${styles.idpBtn} ${styles.idpBtnEntra} ${loading === "azure-ad" ? styles.idpLoading : ""}`}
-              onClick={() => handleSignIn("azure-ad")}
+              className={`${styles.idpBtn} ${styles.idpBtnEntra} ${loading === "microsoft-entra-external" ? styles.idpLoading : ""}`}
+              onClick={() => handleSignIn("microsoft-entra-external")}
               disabled={!!loading}
             >
               <span className={styles.idpIcon}>
@@ -116,7 +116,7 @@ export default function SignIn() {
                 <span className={styles.idpName}>Continue with Microsoft</span>
                 <span className={styles.idpHint}>For Entra ID / Azure AD accounts</span>
               </span>
-              {loading === "azure-ad"
+              {loading === "microsoft-entra-external"
                 ? <span className={styles.spinner}/>
                 : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={styles.idpArrow}>
                     <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>

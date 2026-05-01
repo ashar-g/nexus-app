@@ -1,6 +1,56 @@
 import NextAuth from "next-auth";
 import OktaProvider from "next-auth/providers/okta";
-import AzureADProvider from "next-auth/providers/azure-ad";
+
+// ── Microsoft Entra External ID (CIAM) ───────────────────────────────────────
+// The built-in AzureADProvider targets login.microsoftonline.com, which is NOT
+// valid for External ID (CIAM) tenants.  CIAM tenants use a custom authority:
+//   https://<subdomain>.ciamlogin.com/<tenantId>
+//
+// We therefore define a fully custom OAuth 2.0 / OIDC provider instead.
+// The provider id is "microsoft-entra-external" — update your Azure App
+// Registration redirect URI accordingly:
+//   http://localhost:3000/api/auth/callback/microsoft-entra-external   (dev)
+//   https://your-app.com/api/auth/callback/microsoft-entra-external    (prod)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const tenantId        = process.env.ENTRA_TENANT_ID;
+const tenantSubdomain = process.env.ENTRA_TENANT_SUBDOMAIN; // e.g. "mytenant" from mytenant.ciamlogin.com
+const ciamBaseUrl     = `https://${tenantSubdomain}.ciamlogin.com/${tenantId}`;
+
+const EntraCIAMProvider = {
+  id:   "microsoft-entra-external",
+  name: "Microsoft",
+  type: "oauth",
+
+  clientId:     process.env.ENTRA_CLIENT_ID,
+  clientSecret: process.env.ENTRA_CLIENT_SECRET,
+
+  // CIAM OpenID Connect discovery document
+  wellKnown: `${ciamBaseUrl}/v2.0/.well-known/openid-configuration`,
+
+  authorization: {
+    url: `${ciamBaseUrl}/oauth2/v2.0/authorize`,
+    params: {
+      scope: "openid profile email offline_access",
+    },
+  },
+
+  token:    `${ciamBaseUrl}/oauth2/v2.0/token`,
+  userinfo: "https://graph.microsoft.com/oidc/userinfo",
+
+  // Use PKCE + state for security (required by CIAM)
+  checks:  ["pkce", "state"],
+  idToken: true,
+
+  profile(profile) {
+    return {
+      id:    profile.sub,
+      name:  profile.name ?? profile.preferred_username,
+      email: profile.email ?? profile.preferred_username,
+      image: null,
+    };
+  },
+};
 
 export const authOptions = {
   providers: [
@@ -16,32 +66,15 @@ export const authOptions = {
       },
     }),
 
-    // ── Provider 2: Microsoft Entra ID (Azure AD) ─────────────────────────────
-    // next-auth's "azure-ad" provider implements the OIDC Authorization Code
-    // flow against https://login.microsoftonline.com/{tenantId}/v2.0
-    AzureADProvider({
-      clientId:     process.env.ENTRA_CLIENT_ID,
-      clientSecret: process.env.ENTRA_CLIENT_SECRET,
-      tenantId:     process.env.ENTRA_TENANT_ID,
-      // Request the profile, email, and offline_access scopes.
-      // "User.Read" lets us fetch extra graph claims if needed later.
-      authorization: {
-        params: {
-          scope: "openid profile email offline_access User.Read",
-        },
-      },
-      // Entra returns a versioned profile endpoint — tell next-auth to use v2.0
-      profileUrl: "https://graph.microsoft.com/oidc/userinfo",
-    }),
+    // ── Provider 2: Microsoft Entra External ID (CIAM) ────────────────────────
+    EntraCIAMProvider,
   ],
 
   callbacks: {
     // ── jwt ───────────────────────────────────────────────────────────────────
-    // Called whenever a JWT is created or updated.  `account.provider` tells us
-    // which IDP was used so we can normalise the claim shapes.
     async jwt({ token, account, profile }) {
       if (account) {
-        token.provider    = account.provider;   // "okta" | "azure-ad"
+        token.provider    = account.provider;   // "okta" | "microsoft-entra-external"
         token.accessToken = account.access_token;
         token.idToken     = account.id_token;
         token.tokenType   = account.token_type;
@@ -72,27 +105,21 @@ export const authOptions = {
           token.idp               = profile.idp;
           token.idpName           = "Okta";
 
-        } else if (account?.provider === "azure-ad") {
-          // ── Entra ID / Microsoft-specific ────────────────────────────────
-          // Entra uses different claim names — map to our canonical shape
+        } else if (account?.provider === "microsoft-entra-external") {
+          // ── Entra External ID (CIAM) specific ────────────────────────────
           token.givenName         = profile.given_name;
           token.familyName        = profile.family_name;
           token.preferredUsername = profile.preferred_username ?? profile.email;
-          // Entra does not provide phone_number or zoneinfo in the userinfo
-          // endpoint by default — these require Microsoft Graph API calls
           token.phoneNumber       = null;
           token.zoneinfo          = null;
           token.middleName        = null;
           token.nickname          = null;
-          // Entra puts groups in the access token if configured in the app manifest
-          // (requires "groupMembershipClaims": "SecurityGroup" in the manifest)
           token.groups            = profile.groups || [];
-          // Entra uses "tid" for tenant ID and "oid" for the object ID
           token.tenantId          = profile.tid;
           token.objectId          = profile.oid;
           token.amr               = profile.amr || [];
-          token.idp               = `https://login.microsoftonline.com/${profile.tid}`;
-          token.idpName           = "Microsoft Entra ID";
+          token.idp               = `https://${tenantSubdomain}.ciamlogin.com/${profile.tid}`;
+          token.idpName           = "Microsoft Entra External ID";
         }
       }
 
@@ -122,7 +149,6 @@ export const authOptions = {
         amr:               token.amr       || [],
         idp:               token.idp,
         idpName:           token.idpName,
-        // Entra-only fields (null for Okta sessions)
         tenantId:          token.tenantId  || null,
         objectId:          token.objectId  || null,
       };
